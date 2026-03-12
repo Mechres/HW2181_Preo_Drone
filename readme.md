@@ -6,25 +6,39 @@ This repository contains the results of a reverse engineering effort on the Preo
 
 ---
 
+## 🚀 Latest Findings Summary
+The reverse engineering process is substantially complete. We have successfully mapped the architecture of the **HW2181 SOC (ARM Cortex-M0)**:
+*   **Radio Protocol:** Identified the pairing mechanism on Channel 3 and the adaptive frequency hopping algorithm based on the Controller ID.
+*   **Flight Logic:** Located the PID stabilization loop and the MPU6050 IMU integration via I2C.
+*   **Motor Control:** Mapped the 4 PWM channels to hardware timers T16N0 and T16N3.
+*   **Safety Systems:** Decoded the multi-level battery monitoring (ADC) and signal-loss failsafe logic.
+
+---
+
 ## 📂 File Manifest
 
 ### Firmware & Memory Dumps
 *   `fw_full.bin`: The complete firmware dump from the drone.
-*   `ram_live.bin`: A live RAM dump captured during operation. *Note: The integrity of this dump is not guaranteed.*
+*   `ram_live.bin`: A live RAM dump captured during operation.
 
-### Documentation & Reports
+### Specialized Reports (New)
+*   [`RADIO_PROTOCOL_RE.md`](RADIO_PROTOCOL_RE.md): Detailed analysis of the 2.4GHz RF communication, pairing, and packet structure.
+*   [`FLIGHT_LOGIC_RE.md`](FLIGHT_LOGIC_RE.md): Breakdown of the IMU sensor integration, PID loop, and motor PWM control.
+*   [`SAFETY_AND_BATTERY_RE.md`](SAFETY_AND_BATTERY_RE.md): Documentation of ADC-based battery monitoring and failsafe mechanisms.
+
+### General Documentation
 *   `DRONE_RE_FINAL_REPORT.md`: A comprehensive final report detailing the findings of the reverse engineering process.
-*   `REVERSE_ENGINEERING_NOTES.md`: Raw technical notes and observations made during the analysis.
-*   `conversation_gemini.md`: The full conversation log between the user and Gemini CLI throughout the project.
+*   `REVERSE_ENGINEERING_NOTES.md`: Raw technical notes and observations.
+*   `conversation_gemini.md`: The full conversation log between the user and Gemini CLI.
 
 ### Hardware Reference
-*   `HW2181_cn.md`: Information regarding the HW2181 chip (in Chinese).
-*   `HW2181_datasheet_cn.md`: Text-based datasheet for the HW2181 (in Chinese, missing original PDF imagery).
+*   `HW2181_cn.md`: Information regarding the HW2181 chip.
+*   `HW2181_datasheet_cn.md`: Detailed datasheet for the HW2181 SOC (Cortex-M0 + 2.4G RF).
 
 ---
 
 ## 🛠 Tools Used
-*   **Gemini CLI**: AI-assisted analysis and automation.
+*   **Gemini CLI**: AI-assisted analysis, automation, and documentation.
 *   **Ghidra**: Open-source software reverse engineering suite.
 
 ---
