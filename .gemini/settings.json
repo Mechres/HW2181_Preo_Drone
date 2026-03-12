@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "ghidra": {
+      "command": "python.exe",
+      "args": [
+        "C:\\Users\\myagi\\drone_firmware_dump\\bridge_mcp_ghidra.py"
+      ]
+    }
+  }
+}
