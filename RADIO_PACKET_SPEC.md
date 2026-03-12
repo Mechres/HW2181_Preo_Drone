@@ -18,8 +18,10 @@ Incoming packets from the remote control are stored in a buffer (RAM: `0x200000E
 
 ## 2. Command Transformation
 The firmware scales the 8-bit stick values into 16-bit signed integers for the PID loop:
-- **Formula:** `Internal_Value = (Raw_Byte * 4) - 512`
-- **Resulting Range:** `-512` to `+508`.
+- **Formula:** `Internal_Value = (Raw_Byte * 4) - 400`
+- **Resulting Range:** `-400` to `+620`
+- **Center (stick neutral @ 128):** `(128 * 4) - 400 = 112`
+- **Verified in:** `FUN_00002582`
 
 ## 3. Button Bitmask (Byte 5)
 - **Bit 0 (0x01):** **Auto-Takeoff/Landing**. Sets flight state to 0x03.
