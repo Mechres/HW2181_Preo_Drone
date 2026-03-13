@@ -1,50 +1,65 @@
-# HW2181 SOC Pinout Reference (QFN48)
+# HW2181 SOC Pinout Reference (QFN48) - Complete Master List
 
-This document maps the physical and internal pins of the **HW2181** 2.4G SOC used in the drone. This is critical for locating hardware test points (UART, SWD, PWM) on the PCB.
+This document provides the full 1-48 pin mapping for the **HW2181** 2.4G SOC.
 
-## 1. External Pin Mapping (QFN48 Package)
+## 1. Complete Pin Mapping
 
-| Pin | Name | Primary Function | Secondary / Notes |
+| Pin | Name | Function | Note |
 | :--- | :--- | :--- | :--- |
-| **1** | VDDRF | RF Power | 2.5V ~ 3.6V input |
-| **2** | XTALP | Crystal In | 12/16/20MHz RF Crystal |
-| **3** | XTALN | Crystal Out | RF Crystal output |
-| **5** | RFP | RF P-Side | **Antenna Connection** |
-| **6** | RFN | RF N-Side | **Antenna Connection** |
-| **11** | CE | Chip Enable | High = Active, Low = All-Chip Reset |
-| **12** | PA18 | I2C SCL / PWM | I2C Clock / LED Control |
-| **13** | PA19 | I2C SDA / PWM | I2C Data / LED Control |
-| **16** | PA24 | SPI1 MOSI | External SPI Data Out |
-| **17** | PA25 | SPI1 MISO | External SPI Data In |
-| **24** | PB0 | UART1 RX | **Serial Debug RX** / PWM |
-| **25** | PB1 | UART1 TX | **Serial Debug TX** / PWM |
-| **33** | GND | Ground | Main Digital Ground |
-| **34** | PB10 | OSC1I | MCU External Crystal In |
-| **35** | PB11 | OSC1O | MCU External Crystal Out |
-| **36** | PB12 | MRSTN | **Hardware Reset Pin** (Low-active) |
-| **38** | VDD | MCU Power | 2.2V ~ 3.6V Processor Power |
-| **39** | PA0 | SWD CLK | **Debug Interface (CLK)** |
-| **40** | PA1 | SWD DATA | **Debug Interface (DIO)** |
-| **45** | PA6 | ADC / PWM | Motor Control (Front Right?) |
-| **46** | PA7 | ADC / PWM | Motor Control (Front Left?) |
-| **47** | PA8 | ADC / PWM | Motor Control (Back Right?) |
-| **48** | PA9 | ADC / PWM | Motor Control (Back Left?) |
+| 1 | VDDRF | RF Power | 2.5V ~ 3.6V RF Supply |
+| 2 | XTALP | Crystal In | 12/16/20MHz Crystal |
+| 3 | XTALN | Crystal Out | RF Crystal output |
+| 4 | VDDPA | RF Power | 1.8V Power Amp Output |
+| 5 | RFP | RF P-Side | **Antenna Connection** |
+| 6 | RFN | RF N-Side | **Antenna Connection** |
+| 7 | VDDIF | RF Internal | 1.8V Analog Power Output |
+| 8 | VDDRF | RF Power | 2.5V ~ 3.6V RF Supply |
+| 9 | VDDRF | RF Power | 2.5V ~ 3.6V RF Supply |
+| 10 | VDD18 | Logic Power | 1.8V Digital Power Output |
+| 11 | CE | Chip Enable | High=Active, Low=Reset |
+| 12 | PA18 | I2C SCL / PWM | Status LED 1 |
+| 13 | PA19 | I2C SDA / PWM | Status LED 2 |
+| 14 | PA20 | GPIO / PWM | Expansion |
+| 15 | PA23 | GPIO | Expansion |
+| 16 | PA24 | SPI1 MOSI | Debug/External SPI |
+| 17 | PA25 | SPI1 MISO | Debug/External SPI |
+| 18 | PA26 | GPIO / PWM | Expansion |
+| 19 | PA27 | GPIO / PWM | Expansion |
+| 20 | PA28 | GPIO / PWM | Expansion |
+| 21 | PA29 | GPIO / PWM | Expansion |
+| 22 | PA30 | UART / SPI | Expansion |
+| 23 | PA31 | UART / SPI | Expansion |
+| 24 | PB0 | UART1 RX | **Serial Debug RX** |
+| 25 | PB1 | UART1 TX | **Serial Debug TX** |
+| 26 | PB2 | I2C SCL | Primary Sensor Bus |
+| 27 | PB3 | I2C SDA | Primary Sensor Bus |
+| 28 | PB4 | GPIO | Expansion |
+| 29 | PB5 | ADC 0 | Analog Input |
+| 30 | PB6 | ADC 1 | Analog Input |
+| 31 | PB7 | ADC 2 | Analog Input |
+| 32 | PB8 | ADC 3 / PWM | Analog Input |
+| 33 | GND | Ground | Main Digital Ground |
+| 34 | PB10 | OSC1I | MCU Crystal In |
+| 35 | PB11 | OSC1O | MCU Crystal Out |
+| 36 | PB12 | MRSTN | **Hard Reset** (Active Low) |
+| 37 | PB13 | Buzzer / PWM | **Beeper Output** |
+| 38 | VDD | MCU Power | 2.5V ~ 3.6V Main Supply |
+| 39 | PA0 | SWD CLK | **Programming CLK** |
+| 40 | PA1 | SWD DATA | **Programming DIO** |
+| 41 | PA2 | ADC / PWM | Expansion |
+| 42 | PA3 | ADC / PWM | Expansion |
+| 43 | PA4 | ADC / PWM | Expansion |
+| 44 | PA5 | ADC / PWM | Expansion |
+| 45 | PA6 | PWM / ADC | **Motor 1 (Front Right)** |
+| 46 | PA7 | PWM / ADC | **Motor 2 (Front Left)** |
+| 47 | PA8 | PWM / ADC | **Motor 3 (Back Right)** |
+| 48 | PA9 | PWM / ADC | **Motor 4 (Back Left)** |
 
-## 2. Internal MCU-to-RF Interface
-The following connections are **internal** to the silicon and are not exposed on the package pins. The MCU controls the built-in 2.4G radio via these dedicated lines:
-
-| MCU Pin | RF Pin | Function | Description |
-| :--- | :--- | :--- | :--- |
-| **PA14** | CSN | SPI0 CS | RF Chip Select |
-| **PA15** | SCK | SPI0 SCK | RF SPI Clock |
-| **PA13** | MOSI | SPI0 MOSI | Data MCU -> Radio |
-| **PA12** | MISO | SPI0 MISO | Data Radio -> MCU |
-| **PA11** | IRQ | RF IRQ | Radio Interrupt Signal |
-| **PA16** | CE | RF CE | Radio Module Enable |
-
-## 3. Recommended Test Points for RE
-If you are probing the physical PCB, look for these first:
-- **Programming/Debug:** Look for pads connected to **Pins 39 & 40** (SWD). This is how you would reflash the firmware.
-- **Serial Console:** Probing **Pins 24 & 25** during startup may reveal debug logs (likely at 115200 baud).
-- **Motor Control:** The signals to the motor MOSFETs will originate from **Pins 45-48**.
-- **Radio Signal:** The trace from **Pins 5 & 6** will lead to the 2.4GHz antenna.
+## 2. Internal MCU-to-RF Connections
+These are not package pins, but internal silicon traces:
+- **PA11:** RF IRQ (Interrupt)
+- **PA12:** SPI0 MISO
+- **PA13:** SPI0 MOSI
+- **PA14:** SPI0 CSN (Chip Select)
+- **PA15:** SPI0 SCK (Clock)
+- **PA16:** RF CE (Radio Module Enable)
