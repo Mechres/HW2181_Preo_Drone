@@ -1,6 +1,7 @@
-# Preo RQ77-14W Reverse Engineering Project
+# Preo RQ77-14W Reverse Engineering Project (Eastsoft HW2181FHNQ)
 
 This repository contains the results of a reverse engineering effort on the Preo RQ77-14W drone firmware. The project was facilitated using **Gemini CLI** in conjunction with **Ghidra**.
+
 
 > **Note:** This project is a personal exploration and not the work of a professional security researcher. The findings are provided as-is for educational and research purposes.
 
@@ -50,13 +51,11 @@ Controlled via GPIO (Pins 12 & 13):
 *   [`PERSISTENT_STORAGE_RE.md`](PERSISTENT_STORAGE_RE.md): Flash-based settings analysis.
 *   [`RADIO_EMULATION_NOTES.md`](RADIO_EMULATION_NOTES.md): Hurdles for NRF24L01+ emulation (XN297 compatibility).
 
-### Arduino Controller Versions
-*   `drone_controller_v6.ino`: Most advanced emulation version (Bit-reversal + Length header).
 
-### General Documentation
+### (Old) General Documentation
 *   `DRONE_RE_FINAL_REPORT.md`: Comprehensive project summary.
 *   `REVERSE_ENGINEERING_NOTES.md`: Raw technical notes.
-*   `conversation_gemini.md`: Full project log.
+
 
 ---
 
@@ -68,3 +67,6 @@ Controlled via GPIO (Pins 12 & 13):
 
 ## 📜 Disclaimer
 The information and files in this repository are for research purposes only. Use the firmware or memory dumps at your own risk.
+
+## Contribution
+If you can test, verify it would be really helpfull, also if you can find pdf version of the datasheet please send it or add to this repository.
