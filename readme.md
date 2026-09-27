@@ -7,6 +7,37 @@ This repository contains the results of a reverse engineering effort on the Preo
 
 ---
 
+## 🔬 Session 2: Independent Verification + Live Hardware (start here)
+
+The original findings below were AI-assisted and explicitly not verified
+by a professional — a second pass checked them against the actual
+firmware bytes and, later, the real chip over SWD. **Start with these:**
+
+- [`SESSION2_VERIFIED_FINDINGS.md`](SESSION2_VERIFIED_FINDINGS.md) — what
+  was independently confirmed (with the actual disassembly/data as
+  evidence), and what turned out to be wrong in the original docs below
+  (the RF sync-word claim, the PIPE0/PIPE1 enable claim, the packet
+  byte-0 TYPE-vs-length claim, and others).
+- [`SWD_DEBUGGING_GUIDE.md`](SWD_DEBUGGING_GUIDE.md) — working SWD setup
+  (Pi Pico/picoprobe + OpenOCD) against the real chip, plus tools in
+  [`swd_tools/`](swd_tools/).
+- [`NRF24_EMULATION_ATTEMPT.md`](NRF24_EMULATION_ATTEMPT.md) — a full,
+  systematic attempt to control the stock firmware with a plain
+  nRF24L01+ module (code in [`nrf24_transmitter/`](nrf24_transmitter/)).
+  **Result: doesn't work**, proven two independent ways on real
+  hardware, even after removing the drone's CRC check entirely — read
+  this before trying the same approach.
+- [`PATCH_CRC_BYPASS.md`](PATCH_CRC_BYPASS.md) — a verified, reproducible
+  2-byte firmware patch, applied and confirmed on real hardware. Proves
+  the SWD flash read/write/verify path works end to end.
+- [`CUSTOM_RADIO_FIRMWARE_PLAN.md`](CUSTOM_RADIO_FIRMWARE_PLAN.md) — the
+  current direction: since the stock radio protocol can't be emulated
+  from a plain nRF24L01+, replace the drone's own radio-handling code
+  (keeping the proven PID/motor/IMU code untouched). In progress, not
+  yet implemented.
+
+---
+
 ## 🚀 Latest Findings Summary
 The reverse engineering process is complete. We have successfully mapped the architecture of the **HW2181 SOC (ARM Cortex-M0)**:
 *   **Radio Protocol:** Identified the pairing mechanism on Channel 3 and the adaptive frequency hopping algorithm.
@@ -38,9 +69,15 @@ Controlled via GPIO (Pins 12 & 13):
 ## 📂 File Manifest
 
 ### Firmware & Memory Dumps
-*   `fw_full.bin`: Complete firmware dump.
+*   `fw_full.bin`: Complete original firmware dump (rollback reference — confirmed via live SWD readback to byte-for-byte match the chip before any patching).
+*   `fw_patched_crcbypass.bin`: `fw_full.bin` with the CRC-bypass patch applied (see `PATCH_CRC_BYPASS.md`) — reflects what's currently on the chip as of Session 2.
 *   `ram_live.bin`: Live RAM dump from operation.
 *   `fw_full.bin.gzf`: **Recommended Ghidra Project Export** (contains all labeled functions).
+
+### Session 2 tools
+*   `openocd_hw2181.cfg`: working generic Cortex-M0 SWD config for this chip (no vendor target script exists in OpenOCD).
+*   `swd_tools/`: Python scripts for IAP flash programming, RAM/flash inspection, and breakpoint testing over a live OpenOCD session — see `swd_tools/README.md`.
+*   `nrf24_transmitter/`: serial-console-driven Arduino nRF24L01+ test transmitter — see `NRF24_EMULATION_ATTEMPT.md` for why it doesn't work against the stock firmware.
 
 ### Technical Specifications
 *   [`RADIO_PACKET_SPEC.md`](RADIO_PACKET_SPEC.md): Packet bitmasks and scaling formulas.
