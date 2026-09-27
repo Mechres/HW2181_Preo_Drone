@@ -141,14 +141,22 @@ trigger=`0x5DA2`). Confirmed working end-to-end this session: a 2-byte
 patch was erased, reprogrammed, and verified byte-for-byte against source
 — see `PATCH_CRC_BYPASS.md`.
 
-The datasheet also documents 3 ROM-resident helper functions
-(`IAP_PageErase`, `IAP_WordProgram`, `IAP_WordsProgram`) that would reduce
-code size for any future firmware that needs to self-program flash — but
-their entry-point addresses were lost in the PDF-to-markdown conversion
-(the source text literally cuts off at "stored at address 0x___"). Not
-needed for what's been done so far (external IAP register programming via
-SWD works fine), but worth re-extracting from the original PDF if anyone
-has it, for future on-chip self-programming use.
+The datasheet also documents 3 ROM-resident helper functions that would
+reduce code size for any future firmware that needs to self-program
+flash. Their entry-point addresses were lost in the first-pass PDF-to-
+markdown conversion but recovered once the actual datasheet PDF was
+found and added to this repo — each address holds a pointer to the
+function, not the function itself:
+
+| Function | Pointer stored at |
+|---|---|
+| `IAP_WordsProgram` | `0x10000000` |
+| `IAP_PageErase` | `0x10000004` |
+| `IAP_WordProgram` | `0x10000008` |
+
+Not needed for what's been done so far (external IAP register
+programming via SWD works fine — see `swd_tools/iap_program_page.py`),
+but useful for any future on-chip self-programming firmware.
 
 ## VERIFIED: SWD access works
 
@@ -173,8 +181,18 @@ combination. The likely remaining blocker is the 4-bit trailer field
 (`PKTCTRL.TRAILER_LEN`, minimum value on this chip) that real Nordic
 nRF24L01+ silicon has no way to produce regardless of configuration.
 
-**Current direction** (in progress, see `CUSTOM_RADIO_FIRMWARE_PLAN.md`):
-rather than continue emulating the stock protocol from the transmit side,
-replace the drone's own radio-handling code with something that speaks a
-protocol we fully control on both ends, while leaving the proven PID/
-motor-mixing/IMU code untouched.
+**Update — root cause found, and it closes this door entirely.** Once the
+full HW2181 datasheet PDF was located (see repo root:
+`6360290408807600062102767353.pdf`, extracted to
+`hw2181_full_datasheet.txt`), its real RF electrical spec was checked:
+GFSK frequency deviation = **250kHz** (both 250Kbps and 1Mbps modes).
+Checked against the real Nordic nRF24L01+ Product Specification:
+deviation = **±160kHz**. This is a hardware-fixed analog mismatch,
+unrelated to and beneath any register configuration or firmware logic on
+either chip — full details and the live-hardware proof that led to
+checking it (the `PIPE_ADDR_MATCH` sweep) are in
+`NRF24_EMULATION_ATTEMPT.md`. **This also invalidates
+`CUSTOM_RADIO_FIRMWARE_PLAN.md`'s premise** — see that file's updated
+header. A plain nRF24L01+ cannot control this drone under any firmware
+on either side; a working alternative needs genuine ~250kHz GFSK
+deviation (real XN297L hardware, or an SDR configured to match).

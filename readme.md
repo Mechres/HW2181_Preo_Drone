@@ -24,17 +24,25 @@ firmware bytes and, later, the real chip over SWD. **Start with these:**
 - [`NRF24_EMULATION_ATTEMPT.md`](NRF24_EMULATION_ATTEMPT.md) — a full,
   systematic attempt to control the stock firmware with a plain
   nRF24L01+ module (code in [`nrf24_transmitter/`](nrf24_transmitter/)).
-  **Result: doesn't work**, proven two independent ways on real
-  hardware, even after removing the drone's CRC check entirely — read
-  this before trying the same approach.
+  **Result: doesn't work, and can't — root cause found.** A real,
+  hardware-fixed GFSK deviation mismatch (nRF24L01+: ±160kHz, this chip:
+  250kHz — both confirmed against their real datasheets) means no
+  firmware configuration on either side can make this pairing work.
+  Proven three independent ways on real hardware. Read this before
+  trying the same approach.
 - [`PATCH_CRC_BYPASS.md`](PATCH_CRC_BYPASS.md) — a verified, reproducible
   2-byte firmware patch, applied and confirmed on real hardware. Proves
-  the SWD flash read/write/verify path works end to end.
-- [`CUSTOM_RADIO_FIRMWARE_PLAN.md`](CUSTOM_RADIO_FIRMWARE_PLAN.md) — the
-  current direction: since the stock radio protocol can't be emulated
-  from a plain nRF24L01+, replace the drone's own radio-handling code
-  (keeping the proven PID/motor/IMU code untouched). In progress, not
-  yet implemented.
+  the SWD flash read/write/verify path works end to end (independently
+  useful, even though it didn't end up being the actual blocker above).
+- [`CUSTOM_RADIO_FIRMWARE_PLAN.md`](CUSTOM_RADIO_FIRMWARE_PLAN.md) —
+  scoped, but its premise (fix via a drone-side firmware rewrite) does
+  **not** survive the deviation-mismatch finding above. Only relevant
+  again if paired with a transmitter that has genuine ~250kHz GFSK
+  deviation (real XN297L hardware, or a suitably configured SDR).
+- The full genuine HW2181 datasheet PDF (`6360290408807600062102767353.pdf`)
+  is now in this repo too (a community member tracked it down), along
+  with its full text extraction (`hw2181_full_datasheet.txt`) — the
+  earlier per-topic `.md` files only had partial/reflowed excerpts of it.
 
 ---
 

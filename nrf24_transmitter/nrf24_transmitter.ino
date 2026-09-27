@@ -90,7 +90,8 @@ uint8_t opChannelHW2181() {
 }
 
 // ---- Runtime-tunable state (all changeable over serial, see HELP) ----
-uint8_t addr[4] = {0xE7, 0xE7, 0xE7, 0xE7};
+uint8_t addr[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
+uint8_t addrWidth = 4;
 int      curChannel   = PAIR_CHANNEL_HW2181 + FREQBASE_OFFSET_MHZ;
 rf24_crclength_e crcMode = RF24_CRC_16;
 rf24_datarate_e  dataRate = RF24_250KBPS;
@@ -155,8 +156,8 @@ uint8_t reverseBits(uint8_t b) {
 uint8_t maybeReverse(uint8_t b) { return bitReversalEnabled ? reverseBits(b) : b; }
 
 void applyAddress() {
-  uint8_t rev[4];
-  for (uint8_t i = 0; i < 4; i++) rev[i] = maybeReverse(addr[i]);
+  uint8_t rev[5];
+  for (uint8_t i = 0; i < addrWidth; i++) rev[i] = maybeReverse(addr[i]);
   radio.openWritingPipe(rev);
 }
 
@@ -167,7 +168,7 @@ void applyRadioConfig() {
   radio.setAutoAck(false);
   radio.setPALevel(RF24_PA_MAX);
   radio.setDataRate(dataRate);
-  radio.setAddressWidth(4);
+  radio.setAddressWidth(addrWidth);
   radio.setPayloadSize(8);
   radio.setRetries(0, 0);
   radio.setCRCLength(crcMode);
@@ -283,7 +284,8 @@ void printHelp() {
   Serial.println(F("PAIRCH                - jump to the pairing channel"));
   Serial.println(F("CRC <0|1|2>           - 0=disabled 1=8-bit 2=16-bit"));
   Serial.println(F("RATE <250|1000|2000>  - set data rate (kbps)"));
-  Serial.println(F("ADDR <8 hex chars>    - set 4-byte address, e.g. ADDR E7E7E7E7"));
+  Serial.println(F("ADDR <6/8/10 hex chars> - set 3-5 byte address, e.g. ADDR E7E7E7E7"));
+  Serial.println(F("AWIDTH <3|4|5>        - change address width, keeping current bytes"));
   Serial.println(F("RAW <16 hex chars>    - send one exact 8-byte packet, bypassing stored sticks"));
   Serial.println(F("HELP                  - this list"));
 }
@@ -414,12 +416,22 @@ void handleCommand(String cmd) {
   if (cmd.startsWith("ADDR ")) {
     String hex = cmd.substring(5);
     hex.trim();
-    if (hex.length() != 8) { Serial.println(F("need exactly 8 hex chars (4 bytes)")); return; }
-    for (uint8_t i = 0; i < 4; i++) {
+    uint8_t n = hex.length() / 2;
+    if (hex.length() % 2 != 0 || n < 3 || n > 5) { Serial.println(F("need 6/8/10 hex chars (3-5 bytes)")); return; }
+    for (uint8_t i = 0; i < n; i++) {
       addr[i] = strtoul(hex.substring(i * 2, i * 2 + 2).c_str(), nullptr, 16);
     }
+    addrWidth = n;
+    radio.setAddressWidth(addrWidth);
     applyAddress();
     Serial.println(F("address updated"));
+    return;
+  }
+  if (cmd.startsWith("AWIDTH ")) {
+    addrWidth = constrain(cmd.substring(7).toInt(), 3, 5);
+    radio.setAddressWidth(addrWidth);
+    applyAddress();
+    Serial.print(F("address width -> ")); Serial.println(addrWidth);
     return;
   }
   if (cmd.startsWith("RAW ")) {

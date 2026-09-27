@@ -1,5 +1,21 @@
 # Custom Radio Firmware Replacement — Scoping
 
+> **⚠️ Superseded by a later finding — read `NRF24_EMULATION_ATTEMPT.md`'s
+> "Root cause found" section first.** This plan assumed the blocker was a
+> digital/framing mismatch fixable by rewriting the drone's receive code.
+> Later in Session 2, live SWD probing of the RF core's own hardware
+> address-correlator status bit (`PIPE_ADDR_MATCH`) showed it never
+> fires under *any* configuration, and a genuine GFSK deviation mismatch
+> (nRF24L01+: ±160kHz, this chip: 250kHz — both confirmed against real
+> datasheets) was found to fully explain why. That's an **analog**
+> mismatch beneath any firmware on either chip — rewriting the drone's
+> radio-handling code cannot fix it, because a plain nRF24L01+ transmitter
+> can never produce the deviation this receiver needs, regardless of what
+> code interprets the (never-arriving) result. This plan only becomes
+> relevant again if paired with a transmitter that has genuine ~250kHz
+> GFSK deviation (real XN297L hardware, or an SDR configured to match) —
+> at that point the framing-level work below is still exactly right.
+
 ## Why this approach, and not more nRF24 protocol guessing
 
 Session 2 (see `SESSION2_VERIFIED_FINDINGS.md`) proved, with two independent

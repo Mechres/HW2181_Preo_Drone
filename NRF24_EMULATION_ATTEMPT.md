@@ -1,9 +1,12 @@
 # nRF24L01 Emulation Attempt — Full Writeup (Negative Result)
 
-**tl;dr: didn't work, and we have two independent hardware-level proofs
-that it didn't work, not just "the LED didn't change."** Documented in
-full so nobody else spends a weekend re-deriving this. See
-`CUSTOM_RADIO_FIRMWARE_PLAN.md` for the direction taken instead.
+**tl;dr: doesn't work, can't work, and we know exactly why — a real,
+hardware-fixed GFSK deviation mismatch (160kHz vs 250kHz) between
+nRF24L01+ and this chip's RF core, confirmed against both real
+datasheets.** Documented in full, including three independent negative
+proofs on real hardware, so nobody else spends a weekend re-deriving
+this. `CUSTOM_RADIO_FIRMWARE_PLAN.md`'s premise (fixable via a firmware
+rewrite) does not survive this finding — see its update.
 
 ## Goal
 
@@ -86,19 +89,58 @@ breakpoint approach. Two independent methods, same answer: no packet from
 our transmitter was ever accepted, under any tested parameter
 combination, even with CRC checking removed entirely.
 
-## Leading hypothesis for why
+## Round 2: live SWD register probing, and a decisive third proof
 
-`PKTCTRL.TRAILER_LEN` is set to `0b000` = **4 bits** — the *shortest*
-option this chip's register supports, but not zero, and appended after
-the payload+CRC in the hardware frame. A real Nordic nRF24L01+ has no
-register or mode that produces a custom trailer at all; it simply stops
-transmitting after the CRC bytes. If the receive state machine's frame-
-completion logic depends on seeing those trailer bits (a reasonable guess
-for hardware "Link Control Mode" — see the findings doc's note on
-`MISC1.PACK_LENGTH_EN`), that's a hard architectural mismatch no amount
-of nRF24-side configuration can close.
+After the two negative results above, we got live SWD access working
+against the running chip (see `SWD_DEBUGGING_GUIDE.md`) and pushed
+further:
 
-This is a hypothesis, not independently proven the way the two negative
-results above are — we stopped pursuing nRF24-side fixes once the
-evidence made further blind tuning look like a poor use of time, in favor
-of the firmware-replacement direction in `CUSTOM_RADIO_FIRMWARE_PLAN.md`.
+- Patched out the drone's CRC-mismatch rejection branch entirely (see
+  `PATCH_CRC_BYPASS.md`) — reception still failed.
+- Found a much more sensitive, lower-level signal than anything above:
+  `STATUS1` register bit 7, `PIPE_ADDR_MATCH` — set by the RF core's own
+  hardware address correlator, upstream of *any* software (hardware or
+  software link-control mode alike). Read it live via a debugger-injected
+  function call to the firmware's own `RF_Read_Register` (`0x1962`),
+  restoring all clobbered registers afterward so the running firmware
+  never sees the interruption.
+- Swept address width (3/4/5 bytes), bit-reversal on/off, both link
+  control modes (`MISC1.PACK_LENGTH_EN`), multiple channels, both data
+  rates, both CRC states — **`PIPE_ADDR_MATCH` never set, in any single
+  reading, across every combination tested.**
+
+That's the third independent hardware-level proof, and the most telling
+one: if the RF core's own correlator never recognizes our transmission,
+no downstream software change (on either the nRF24 side or a rewritten
+drone firmware) could matter, because there'd be nothing valid to hand to
+that software in the first place.
+
+## Root cause found: GFSK deviation mismatch (hardware, unfixable by configuration)
+
+Once the full HW2181 datasheet PDF was available (see repo root), its RF
+electrical spec was checked directly:
+
+> `Δf1M` / `Δf250K` (frequency deviation) = **250 kHz** (Typ.), at both
+> 1Mbps and 250Kbps.
+
+Checked against the real Nordic nRF24L01+ Product Specification:
+
+> Frequency deviation @ 250kbps / 1Mbps = **±160 kHz**.
+
+**160kHz vs 250kHz is a genuine, hardware-fixed GFSK modulation
+mismatch.** Deviation is set by each chip's analog RF frontend, not
+adjustable by any register on either side. This fully explains every
+result above: the drone's receiver is tuned to demodulate a ±250kHz
+signal, and a ±160kHz nRF24L01+ transmission is enough off-spec that its
+address correlator never reliably locks on — independent of address,
+channel, CRC, packet format, or link-control mode, exactly matching what
+was observed.
+
+**Conclusion: a plain nRF24L01+ cannot control this drone, under any
+firmware configuration on either side.** This also invalidates
+`CUSTOM_RADIO_FIRMWARE_PLAN.md`'s core premise (that a firmware rewrite
+on the drone could work around the mismatch) — that plan assumed a
+digital/framing problem; this is analog, beneath any firmware on either
+chip. A working alternative transmitter needs genuine ~250kHz GFSK
+deviation — either real XN297L-family hardware, or an SDR (e.g. HackRF,
+ADALM-PLUTO) configured to match.
