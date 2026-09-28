@@ -124,3 +124,31 @@ Useful commands via `rpc.cmd(...)`: `halt`, `resume`, `reg pc`,
   value** in RAM, or a value that's provably only written on a genuine
   event (like the persistent flash pairing record), is a much more
   trustworthy signal than "was this function entered."
+- **Hardware watchpoints (`wp <addr> <len> <r|w|a>`) appear non-functional
+  on this target via this generic Cortex-M0 config** — tested against
+  multiple addresses, including one (the raw RF packet buffer at
+  `0x200000E8`) known from disassembly to be touched constantly, with
+  `a` (any access): zero hits every time, no error either. Breakpoints
+  work fine on the exact same kind of address (confirmed repeatedly).
+  Don't trust a "0 hits" result from `wp` on this chip as meaning "never
+  accessed" — verify with a `bp` on a specific static instruction
+  address instead. Root cause not confirmed; the connection log's
+  `DWT_DEVARCH: 0x0` suggests a possibly nonstandard/reduced DWT block on
+  this SoC.
+- **`mdw`/`mww` (32-bit word read/write) silently fail on addresses that
+  aren't 4-byte aligned** — this chip (like any ARMv6-M Cortex-M0) can't
+  do unaligned word bus transfers. The four stick-value RAM cells
+  (`0x2000003A/3C/3E/40`) are only 2-byte aligned, so `mdw`/`mww` on them
+  either returns an empty RPC response (read) or silently corrupts the
+  *next* field too (write — a `mww` at `0x3E` also stomps 2 bytes of the
+  field at `0x40`, since they're only 2 bytes apart). **Always use
+  `mdh`/`mwh` (halfword) for these fields.** The empty-response failure
+  mode is easy to mistake for "value is 0" if you don't check for it —
+  see `SESSION3_FULLCHAIN_TEST.md` for how this bit an earlier version of
+  a test script in this repo.
+- **`mdw`/`mdh`/etc. return nothing over the Tcl RPC port if the target
+  isn't actually halted yet** — even right after sending `halt`, add a
+  short (~100ms) sleep before the read, or the read silently races ahead
+  of the halt and comes back empty. `mww`/`mwh` don't have this problem
+  (they're meant for live/background writes and work with the target
+  running).

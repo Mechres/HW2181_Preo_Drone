@@ -44,6 +44,26 @@ firmware bytes and, later, the real chip over SWD. **Start with these:**
   with its full text extraction (`hw2181_full_datasheet.txt`) — the
   earlier per-topic `.md` files only had partial/reflowed excerpts of it.
 
+## 🔬 Session 3: Full-Chain Test (does an SWD write actually spin a motor?)
+
+- [`SESSION3_FULLCHAIN_TEST.md`](SESSION3_FULLCHAIN_TEST.md) — live test
+  of `CUSTOM_RADIO_FIRMWARE_PLAN.md`'s core assumption (write the four
+  scaled stick-value RAM cells, the stock flight loop picks them up).
+  **Result: not confirmed as described.** A breakpoint+register trace on
+  the real `UpdateMotors` call showed it always receives `0,0,0,0` in the
+  drone's current never-paired state, regardless of writes to those
+  cells — the real live input is a separate stack-local buffer a one-off
+  write doesn't appear to reach. Leading hypothesis: an internal
+  signal-acquisition hysteresis state machine needs *sustained* writes
+  (mimicking a real packet stream), not single pokes — not yet confirmed,
+  see the doc for the concrete next test. Also documents two real
+  debugging gotchas found along the way: hardware watchpoints appear
+  non-functional on this target, and `mdw`/`mww` (word-width) silently
+  fail/corrupt on these not-word-aligned RAM cells — always use
+  `mdh`/`mwh` (halfword) instead. `SWD_DEBUGGING_GUIDE.md` and
+  `SESSION2_VERIFIED_FINDINGS.md` have been updated with pointers to
+  this correction.
+
 ---
 
 ## 🚀 Latest Findings Summary

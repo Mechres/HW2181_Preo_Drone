@@ -48,9 +48,19 @@ for flash contents).
   `pitch=0x2000003A, roll=0x2000003C, throttle=0x2000003E, yaw=0x20000040`
   (16-bit each), derived from the literal pool constant at file offset
   `0x2850` (value `0x20000028`) plus the `+18/+20/+22/+24` byte offsets
-  used in the scaling function at `0x2582`. This is the direct write
-  target for any future replacement radio code (see
-  `CUSTOM_RADIO_FIRMWARE_PLAN.md`).
+  used in the scaling function at `0x2582`. This is the write target the
+  *packet-scaling function itself* uses — confirmed by disassembly, not
+  in dispute.
+  **Session 3 correction:** live SWD testing found this is *not*
+  sufficient as a direct write target for a replacement radio/flight
+  controller as originally assumed — see `SESSION3_FULLCHAIN_TEST.md`.
+  A breakpoint+register trace on the real `UpdateMotors` call showed it
+  consistently receives `0,0,0,0` regardless of writes to these cells,
+  in the drone's current never-paired state; the actual live input to
+  that call is a separate stack-local buffer that a one-off SWD write
+  doesn't appear to reach. Likely needs sustained/repeated writes (not
+  single pokes) to satisfy an internal hysteresis state machine — see
+  that doc for the evidence and the follow-up test needed to confirm.
 
 ## VERIFIED: Hop channel formula
 

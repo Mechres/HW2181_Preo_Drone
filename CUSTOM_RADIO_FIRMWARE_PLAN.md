@@ -15,6 +15,18 @@
 > relevant again if paired with a transmitter that has genuine ~250kHz
 > GFSK deviation (real XN297L hardware, or an SDR configured to match) —
 > at that point the framing-level work below is still exactly right.
+>
+> **⚠️ Second correction, Session 3 — read `SESSION3_FULLCHAIN_TEST.md`
+> first too.** This plan's other core assumption (below: "write the four
+> scaled RAM cells, the stock flight loop just picks them up") was tested
+> live via SWD and **did not work as described** — the real per-tick
+> `UpdateMotors` call was traced (breakpoint + register read) to always
+> receive `0,0,0,0` regardless of writes to those cells, in the drone's
+> current "never paired" state. The likely fix is writing those cells
+> **continuously** (mimicking a real packet stream) rather than as
+> one-off pokes, to satisfy an internal signal-acquisition hysteresis
+> state machine — but this is an unconfirmed hypothesis, not yet tested.
+> See that doc for the full evidence and the concrete next test.
 
 ## Why this approach, and not more nRF24 protocol guessing
 
